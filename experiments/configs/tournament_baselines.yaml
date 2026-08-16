@@ -1,0 +1,24 @@
+schema: tournament_config_v1
+name: baseline_population_v1
+
+population:
+  - id: starter
+    agent: starter
+    label: Official starter
+  - id: heuristic_v1
+    agent: heuristic
+    label: Minimal economic v1
+  - id: scripted_v1
+    agent: scripted
+    label: Scripted plan v1
+  - id: planner_v1
+    agent: planner
+    label: Macro beam planner v1
+
+# Must be even: each seed is replayed with the seats swapped.
+games_per_matchup: 2
+seed_start: 10000
+episode_steps: 720
+initial_rating: 1500
+k_factor: 24
+debug: false

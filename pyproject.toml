@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kaggriculture"
+version = "0.1.0"
+description = "Research and simulation platform for the Kaggle Kaggriculture competition"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "kaggle-environments==1.32.7",
+  "pyyaml>=6.0",
+  "streamlit==1.60.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+kaggriculture = "kaggriculture.__main__:main"
+kaggriculture-tournament = "kaggriculture.simulation.tournament:main"
+kaggriculture-check-env = "kaggriculture.env.version_check:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+filterwarnings = [
+  "ignore::DeprecationWarning",
+]

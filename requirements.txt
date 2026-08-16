@@ -1,0 +1,5 @@
+# Pinned for reproducible experiments. Install into Python >=3.11.
+kaggle-environments==1.32.7
+pyyaml==6.0.3
+streamlit==1.60.0
+pytest==9.1.1

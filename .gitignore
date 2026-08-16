@@ -1,0 +1,31 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
+.env
+*.log
+
+# Generated official visualizer HTML (large, machine-local)
+ui/static/replay_visualizers/*
+!ui/static/replay_visualizers/.gitkeep
+
+# Local experiment outputs (keep directory markers)
+experiments/results/*
+!experiments/results/.gitkeep
+experiments/checkpoints/*
+!experiments/checkpoints/.gitkeep
+experiments/replays/*
+!experiments/replays/.gitkeep
+
+# Generated submissions
+submissions/*
+!submissions/.gitkeep

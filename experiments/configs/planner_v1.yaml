@@ -1,0 +1,12 @@
+agent: planner_v1
+
+planner:
+  beam_width: 6
+  depth: 3
+  # planning_horizon reserved for later true rollouts
+  horizon: 72
+
+simulation:
+  games: 1
+  seed_start: 42
+  episode_steps: 720

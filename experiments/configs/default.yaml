@@ -1,0 +1,9 @@
+# Default local simulation config (Phase 1)
+episode_steps: 720
+seed: 42
+agent_a: random_legal
+agent_b: starter
+games: 1
+debug: false
+replay: true
+full_replay: false
