@@ -7,8 +7,8 @@ gap.
 
 ## Sequential milestone
 
-The platform is implemented through **Phase 13**. The next sequential target is
-**Phase 14 — ML dataset**.
+The platform is implemented through **Phase 14**. The next sequential target is
+**Phase 15 — Imitation learning**.
 
 ## Evidence by phase
 
@@ -65,7 +65,10 @@ The platform is implemented through **Phase 13**. The next sequential target is
   and inventory/supply pressure from public prices. Falling or oversupplied
   markets nudge the planner leaf when goods sit in the shed. Unobservable
   opponent-shed sale events were dropped.
-- **Phases 14–20 — not started.** Learning, self-play, hybrid,
+- **Phase 14 — complete.** The planner can emit compact teacher JSONL rows
+  (features, candidate macros, scores, chosen macro, episode outcome) via
+  `--teacher-jsonl`. Raw farms and observations are not stored.
+- **Phases 15–20 — not started.** Imitation, value nets, self-play, RL, hybrid,
   and submission modules are placeholders only.
 
 ## Current limitations that affect phase claims

@@ -149,10 +149,10 @@ ranking derived from existing experiment results.
 
 ## Not implemented yet
 
-- Learning / RL
+- Imitation learning / value nets / RL
 - Submission exporter
 
-## Implemented through Phase 13
+## Implemented through Phase 14
 
 - Official env wrapper + reconstructable compact v2 replays
 - `GameState` parsing + legal-action helpers

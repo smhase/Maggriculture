@@ -12,7 +12,7 @@ from kaggriculture.logging import get_logger
 from kaggriculture.planning.beam_search import beam_search, choose_crop
 from kaggriculture.planning.market_model import MarketTracker
 from kaggriculture.planning.opponent_model import profile_opponent
-from kaggriculture.planning.macros import BuySeeds, ExpandFarm, LiquidateInventory, SellCommodity
+from kaggriculture.planning.macros import BuySeeds, ExpandFarm, LiquidateInventory, SellCommodity, macro_label
 from kaggriculture.planning.scheduler import schedule
 
 logger = get_logger("agents.planner")
@@ -54,6 +54,7 @@ class PlannerAgent(Agent):
         self.last_reasoning: str = ""
         self._opp_money: Optional[float] = None
         self._market = MarketTracker()
+        self.teacher_buffer = None
 
     def begin_episode(self) -> None:
         super().begin_episode()
@@ -94,6 +95,16 @@ class PlannerAgent(Agent):
         self.last_trace = result.reasoning
         self.last_reasoning = result.reasoning.headline
         logger.debug("%s", result.reasoning.headline)
+        if self.teacher_buffer is not None:
+            from kaggriculture.learning.features import compact_features
+
+            self.teacher_buffer.record(
+                features=compact_features(state),
+                candidates=[macro_label(n.macros[0]) for n in result.beam if n.macros],
+                scores=[n.score for n in result.beam if n.macros],
+                chosen=macro_label(result.best_macro),
+                headline=result.reasoning.headline,
+            )
         extra: list[list[Any]] = []
         action = schedule(
             state,

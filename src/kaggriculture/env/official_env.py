@@ -239,6 +239,8 @@ class KaggricultureEnv:
             info=dict(self._env.info or {}),
         )
         self._last_result = result
+        _attach_teacher_outcome(agent_a, result, 0)
+        _attach_teacher_outcome(agent_b, result, 1)
         logger.info(
             "Finished in %.2fs steps=%d rewards=%s statuses=%s",
             duration,
@@ -247,6 +249,21 @@ class KaggricultureEnv:
             statuses,
         )
         return result
+
+
+def _attach_teacher_outcome(agent: AgentLike, result: GameResult, seat: int) -> None:
+    buffer = getattr(agent, "teacher_buffer", None)
+    if buffer is None or not hasattr(buffer, "attach_outcome"):
+        return
+    rewards = list(result.rewards or [None, None])
+    while len(rewards) < 2:
+        rewards.append(None)
+    buffer.attach_outcome(
+        reward=rewards[seat],
+        opponent_reward=rewards[1 - seat],
+        winner=result.winner,
+        seat=seat,
+    )
 
 
 def _agent_traces(agent: AgentLike) -> list[Any]:

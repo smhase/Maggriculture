@@ -70,6 +70,7 @@ def play_games(
     replay_dir: Optional[Path] = None,
     full_replay: bool = False,
     debug: bool = False,
+    teacher_jsonl: Optional[Path] = None,
 ) -> list[GameResult]:
     """Run ``games`` head-to-head matches with incremental seeds."""
     results: list[GameResult] = []
@@ -77,7 +78,10 @@ def play_games(
         seed = seed_start + i
         agent_a = resolve_agent(agent_a_spec, seed=seed, episode_steps=episode_steps)
         agent_b = resolve_agent(agent_b_spec, seed=seed + 10_000, episode_steps=episode_steps)
-        # Reset RNG for random_legal each game (resolve creates fresh instances)
+        if teacher_jsonl is not None and hasattr(agent_a, "teacher_buffer"):
+            from kaggriculture.learning import TeacherBuffer
+
+            agent_a.teacher_buffer = TeacherBuffer()
 
         env = KaggricultureEnv(seed=seed, episode_steps=episode_steps, debug=debug)
         replay_path = None
@@ -96,6 +100,9 @@ def play_games(
             full_replay_path=full_path,
         )
         results.append(result)
+        buffer = getattr(agent_a, "teacher_buffer", None)
+        if teacher_jsonl is not None and buffer is not None and getattr(buffer, "samples", None):
+            buffer.dump_jsonl(teacher_jsonl, append=True)
         print(
             f"game={i} seed={seed} {result.agent_names[0]} vs {result.agent_names[1]} "
             f"rewards={result.rewards} statuses={result.statuses} "
@@ -114,7 +121,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--episode-steps", type=int, default=720)
     parser.add_argument("--replay-dir", type=Path, default=None)
     parser.add_argument("--full-replay", action="store_true")
-    parser.add_argument("--debug", action="store_true")
+    parser.add_argument(
+        "--teacher-jsonl",
+        type=Path,
+        default=None,
+        help="Append compact planner teacher samples (features, candidates, choice, outcome)",
+    )
     parser.add_argument(
         "--log-level",
         default="WARNING",
@@ -144,6 +156,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         replay_dir=args.replay_dir,
         full_replay=args.full_replay,
         debug=args.debug,
+        teacher_jsonl=args.teacher_jsonl,
     )
 
     summary = summarize_results(results)
