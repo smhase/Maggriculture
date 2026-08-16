@@ -72,3 +72,25 @@ def test_runner_writes_experiment_json(tmp_path):
     assert data["config"]["seed_start"] == 30
     assert data["summary"]["games"] == 2
     assert len(data["games"]) == 2
+
+
+def test_runner_parses_debug_and_teacher_jsonl(tmp_path):
+    output = tmp_path / "teacher.jsonl"
+    exit_code = main(
+        [
+            "--agent-a",
+            "pass",
+            "--agent-b",
+            "pass",
+            "--games",
+            "1",
+            "--seed-start",
+            "1",
+            "--episode-steps",
+            "24",
+            "--debug",
+            "--teacher-jsonl",
+            str(output),
+        ]
+    )
+    assert exit_code == 0

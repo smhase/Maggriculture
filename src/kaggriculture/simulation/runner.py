@@ -121,6 +121,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--episode-steps", type=int, default=720)
     parser.add_argument("--replay-dir", type=Path, default=None)
     parser.add_argument("--full-replay", action="store_true")
+    parser.add_argument("--debug", action="store_true")
     parser.add_argument(
         "--teacher-jsonl",
         type=Path,
