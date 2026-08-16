@@ -31,6 +31,7 @@ from kaggriculture.planning.macros import (
     WaterUrgent,
     macro_label,
 )
+from kaggriculture.planning.opponent_model import OpponentProfile, opponent_score_adjust
 from kaggriculture.planning.scheduler import propose_macros
 from kaggriculture.planning.trace import Alternative, DecisionTrace
 
@@ -60,6 +61,7 @@ def beam_search(
     turns_per_day: int = DEFAULT_TURNS_PER_DAY,
     profile: Optional[StrategyProfile] = None,
     time_budget_s: Optional[float] = None,
+    opponent: Optional[OpponentProfile] = None,
 ) -> BeamResult:
     """Search short macro sequences on a forward model; return the PV head."""
     width = int(profile.beam_width) if profile is not None else int(beam_width)
@@ -82,6 +84,7 @@ def beam_search(
         turns_per_day=turns_per_day,
         profile=profile,
         deadline=deadline,
+        opponent=opponent,
     )
     for d in range(2, max(1, max_depth) + 1):
         if time.perf_counter() >= deadline:
@@ -94,6 +97,7 @@ def beam_search(
             turns_per_day=turns_per_day,
             profile=profile,
             deadline=deadline,
+            opponent=opponent,
         )
 
     if last is None or not last.macros:
@@ -113,6 +117,11 @@ def beam_search(
 
     first = last.macros[0]
     causes = _causes(state, first, profile)
+    if opponent is not None:
+        causes.append(
+            f"opp_money={opponent.money:.0f} plants={opponent.n_plants} "
+            f"expand={opponent.expansion_stage} seller={opponent.likely_seller}"
+        )
     reasoning = _trace(
         source=profile.name if profile else "planner",
         state=state,
@@ -126,7 +135,7 @@ def beam_search(
     )
     # Rebuild a small beam snapshot from the last search via a second shallow pass
     # is unnecessary; attach alternatives from a depth-1 ranking.
-    root = _root_ranked(state, crop, turns_per_day, profile, width)
+    root = _root_ranked(state, crop, turns_per_day, profile, width, opponent)
     alts = [
         Alternative(macro=macro_label(node.macros[0]), score=node.score)
         for node in root[1:4]
@@ -174,9 +183,10 @@ def _search_depth(
     turns_per_day: int,
     profile: Optional[StrategyProfile],
     deadline: float,
+    opponent: Optional[OpponentProfile] = None,
 ) -> Optional[PlanNode]:
     beam: list[PlanNode] = [
-        PlanNode(macros=(), score=_leaf_score(state, profile, turns_per_day), state=state)
+        PlanNode(macros=(), score=_leaf_score(state, profile, turns_per_day, opponent), state=state)
     ]
     for _ply in range(max(1, depth)):
         if time.perf_counter() >= deadline:
@@ -194,7 +204,7 @@ def _search_depth(
                 expanded.append(
                     PlanNode(
                         macros=seq,
-                        score=_leaf_score(nxt, profile, turns_per_day),
+                        score=_leaf_score(nxt, profile, turns_per_day, opponent),
                         state=nxt,
                     )
                 )
@@ -211,6 +221,7 @@ def _root_ranked(
     turns_per_day: int,
     profile: Optional[StrategyProfile],
     beam_width: int,
+    opponent: Optional[OpponentProfile] = None,
 ) -> list[PlanNode]:
     ranked: list[PlanNode] = []
     for macro in _candidates(state, preferred_crop, turns_per_day, profile, ply=0):
@@ -218,7 +229,7 @@ def _root_ranked(
         ranked.append(
             PlanNode(
                 macros=(macro,),
-                score=_leaf_score(nxt, profile, turns_per_day),
+                score=_leaf_score(nxt, profile, turns_per_day, opponent),
                 state=nxt,
             )
         )
@@ -250,6 +261,7 @@ def _leaf_score(
     state: GameState,
     profile: Optional[StrategyProfile],
     turns_per_day: int,
+    opponent: Optional[OpponentProfile] = None,
 ) -> float:
     score = evaluate_state(state, turns_per_day=turns_per_day)
     self_money = float(state.self_player.farm.money)
@@ -270,6 +282,8 @@ def _leaf_score(
     elif risk == "safe":
         if self_money < (profile.cash_reserve if profile else 800):
             score -= 80.0
+    if opponent is not None:
+        score += opponent_score_adjust(state, opponent)
     return score
 
 

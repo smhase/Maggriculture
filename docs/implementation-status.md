@@ -7,8 +7,8 @@ gap.
 
 ## Sequential milestone
 
-The platform is implemented through **Phase 11**. The next sequential target is
-**Phase 12 — Opponent modelling**.
+The platform is implemented through **Phase 12**. The next sequential target is
+**Phase 13 — Market modelling**.
 
 ## Evidence by phase
 
@@ -57,7 +57,11 @@ The platform is implemented through **Phase 11**. The next sequential target is
   act-timeout regression, and a smoke tournament harness against pass/heuristic.
   Full-horizon quality is the existing planner-vs-starter 720-turn test.
   Search still does not clone the official engine.
-- **Phases 12–20 — not started.** Opponent, market, learning, self-play, hybrid,
+- **Phase 12 — complete.** Public-farm opponent profiles cover crop/animal mix,
+  expansion, capital, hire counts, harvestable dump pressure, and a money-delta
+  selling proxy. The planner applies a small interpretable leaf adjustment and
+  records the summary in CoC causes.
+- **Phases 13–20 — not started.** Market, learning, self-play, hybrid,
   and submission modules are placeholders only.
 
 ## Current limitations that affect phase claims
