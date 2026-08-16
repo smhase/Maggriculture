@@ -152,7 +152,7 @@ ranking derived from existing experiment results.
 - Learning / RL
 - Submission exporter
 
-## Implemented through Phase 12
+## Implemented through Phase 13
 
 - Official env wrapper + reconstructable compact v2 replays
 - `GameState` parsing + legal-action helpers

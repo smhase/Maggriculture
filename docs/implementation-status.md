@@ -7,8 +7,8 @@ gap.
 
 ## Sequential milestone
 
-The platform is implemented through **Phase 12**. The next sequential target is
-**Phase 13 — Market modelling**.
+The platform is implemented through **Phase 13**. The next sequential target is
+**Phase 14 — ML dataset**.
 
 ## Evidence by phase
 
@@ -61,7 +61,11 @@ The platform is implemented through **Phase 12**. The next sequential target is
   expansion, capital, hire counts, harvestable dump pressure, and a money-delta
   selling proxy. The planner applies a small interpretable leaf adjustment and
   records the summary in CoC causes.
-- **Phases 13–20 — not started.** Market, learning, self-play, hybrid,
+- **Phase 13 — complete.** A per-episode `MarketTracker` keeps SMA, momentum,
+  and inventory/supply pressure from public prices. Falling or oversupplied
+  markets nudge the planner leaf when goods sit in the shed. Unobservable
+  opponent-shed sale events were dropped.
+- **Phases 14–20 — not started.** Learning, self-play, hybrid,
   and submission modules are placeholders only.
 
 ## Current limitations that affect phase claims

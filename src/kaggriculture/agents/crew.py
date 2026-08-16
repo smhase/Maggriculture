@@ -26,6 +26,7 @@ from kaggriculture.env.state import GameState
 from kaggriculture.env.tiles import is_empty, is_weed
 from kaggriculture.planning.beam_search import beam_search, choose_crop
 from kaggriculture.planning.macros import BuySeeds, ExpandFarm, LiquidateInventory, SellCommodity
+from kaggriculture.planning.market_model import MarketTracker
 from kaggriculture.planning.opponent_model import profile_opponent
 from kaggriculture.planning.scheduler import schedule
 from kaggriculture.planning.trace import DecisionTrace
@@ -52,11 +53,17 @@ class CrewAgent(Agent):
         self.profile = profile or CREW
         self.name = self.profile.name
         self._opp_money: Optional[float] = None
+        self._market = MarketTracker()
         self._farmer = PlannerAgent(
             episode_steps=episode_steps,
             turns_per_day=turns_per_day,
             profile=self.profile,
         )
+
+    def begin_episode(self) -> None:
+        super().begin_episode()
+        self._opp_money = None
+        self._market.reset()
 
     def act(self, observation: Any, configuration: Optional[Any] = None) -> dict[str, Any]:
         episode_steps = self.episode_steps
@@ -78,12 +85,14 @@ class CrewAgent(Agent):
         crop = self._farmer.preferred_crop or choose_crop(state)
         opp = profile_opponent(state, previous_money=self._opp_money)
         self._opp_money = opp.money
+        market = self._market.observe(state)
         result = beam_search(
             state,
             preferred_crop=crop,
             turns_per_day=turns_per_day,
             profile=profile,
             opponent=opp,
+            market=market,
         )
         action = schedule(state, result.best_macro, turns_per_day=turns_per_day)
         claimed: set[tuple[int, int]] = set()

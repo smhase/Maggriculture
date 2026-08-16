@@ -10,6 +10,7 @@ from kaggriculture.env.observation import parse_observation
 from kaggriculture.env.rules import DEFAULT_EPISODE_STEPS, DEFAULT_TURNS_PER_DAY
 from kaggriculture.logging import get_logger
 from kaggriculture.planning.beam_search import beam_search, choose_crop
+from kaggriculture.planning.market_model import MarketTracker
 from kaggriculture.planning.opponent_model import profile_opponent
 from kaggriculture.planning.macros import BuySeeds, ExpandFarm, LiquidateInventory, SellCommodity
 from kaggriculture.planning.scheduler import schedule
@@ -52,10 +53,12 @@ class PlannerAgent(Agent):
         self.name = self.profile.name
         self.last_reasoning: str = ""
         self._opp_money: Optional[float] = None
+        self._market = MarketTracker()
 
     def begin_episode(self) -> None:
         super().begin_episode()
         self._opp_money = None
+        self._market.reset()
 
     def act(self, observation: Any, configuration: Optional[Any] = None) -> dict[str, Any]:
         episode_steps = self.episode_steps
@@ -77,6 +80,7 @@ class PlannerAgent(Agent):
         crop = self.preferred_crop or choose_crop(state)
         opp = profile_opponent(state, previous_money=self._opp_money)
         self._opp_money = opp.money
+        market = self._market.observe(state)
         result = beam_search(
             state,
             beam_width=profile.beam_width,
@@ -85,6 +89,7 @@ class PlannerAgent(Agent):
             turns_per_day=turns_per_day,
             profile=profile,
             opponent=opp,
+            market=market,
         )
         self.last_trace = result.reasoning
         self.last_reasoning = result.reasoning.headline
