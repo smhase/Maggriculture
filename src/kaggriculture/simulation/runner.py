@@ -16,12 +16,14 @@ from pathlib import Path
 from typing import Any, Optional
 
 from kaggriculture.agents import (
+    CrewAgent,
     MinimalEconomicAgent,
     OfficialAgent,
     PlannerAgent,
     RandomLegalAgent,
     ScriptedAgent,
 )
+from kaggriculture.agents.profiles import NAMED_PROFILES
 from kaggriculture.env.official_env import GameResult, KaggricultureEnv
 from kaggriculture.logging import configure_logging, get_logger
 from kaggriculture.simulation.metrics import build_experiment_report, summarize_results
@@ -30,7 +32,8 @@ from kaggriculture.simulation.replay import save_json
 logger = get_logger("simulation.runner")
 
 _SUPPORTED = (
-    "pass, random, starter, random_legal, heuristic, scripted, planner"
+    "pass, random, starter, random_legal, heuristic, scripted, planner, "
+    "long_term, short_term, solo, risk_taker, safe, swing, always_win, never_lose, crew"
 )
 
 
@@ -47,6 +50,13 @@ def resolve_agent(spec: str, *, seed: int = 0, episode_steps: int = 720) -> Any:
         return ScriptedAgent(episode_steps=episode_steps)
     if key in ("planner", "planner_v1", "beam"):
         return PlannerAgent(episode_steps=episode_steps)
+    if key == "crew":
+        return CrewAgent(episode_steps=episode_steps)
+    if key in NAMED_PROFILES:
+        profile = NAMED_PROFILES[key]
+        if profile.hire == "crew":
+            return CrewAgent(episode_steps=episode_steps, profile=profile)
+        return PlannerAgent(episode_steps=episode_steps, profile=profile)
     raise ValueError(f"Unknown agent {spec!r}. Supported: {_SUPPORTED}")
 
 

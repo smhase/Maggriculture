@@ -1,0 +1,39 @@
+schema: tournament_config_v1
+name: strategy_population_v1
+
+population:
+  - id: long_term
+    agent: long_term
+    label: Long-horizon planner
+  - id: short_term
+    agent: short_term
+    label: Short-horizon planner
+  - id: solo
+    agent: solo
+    label: Never hire
+  - id: risk_taker
+    agent: risk_taker
+    label: Aggressive
+  - id: safe
+    agent: safe
+    label: Conservative
+  - id: swing
+    agent: swing
+    label: Risk when behind
+  - id: always_win
+    agent: always_win
+    label: Maximize differential
+  - id: never_lose
+    agent: never_lose
+    label: Protect the floor
+  - id: crew
+    agent: crew
+    label: Specialist farmhands
+
+# Must be even: each seed is replayed with the seats swapped.
+games_per_matchup: 2
+seed_start: 20000
+episode_steps: 720
+initial_rating: 1500
+k_factor: 24
+debug: false

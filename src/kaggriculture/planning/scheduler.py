@@ -6,7 +6,7 @@ Invalidated macros degrade to IDLE / nearest maintenance.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from kaggriculture.agents.navigation import (
     can_harvest_plant,
@@ -21,6 +21,9 @@ from kaggriculture.env.legal import next_land_cost
 from kaggriculture.env.rules import CROPS, DEFAULT_TURNS_PER_DAY
 from kaggriculture.env.state import GameState
 from kaggriculture.env.tiles import is_empty, is_weed
+if TYPE_CHECKING:
+    from kaggriculture.agents.profiles import StrategyProfile
+
 from kaggriculture.planning.macros import (
     BuySeeds,
     ClearWeed,
@@ -74,6 +77,7 @@ def propose_macros(
     *,
     preferred_crop: str = "WHEAT",
     turns_per_day: int = DEFAULT_TURNS_PER_DAY,
+    profile: Optional["StrategyProfile"] = None,
 ) -> list[Macro]:
     """Generate a small set of justified candidate macros from state."""
     farm = state.self_player.farm
@@ -115,7 +119,21 @@ def propose_macros(
 
     land = next_land_cost(farm.unlocked_quadrants)
     empty_n = len(empties)
-    if land is not None and empty_n < 5 and farm.money >= land + 1200 and state.day <= 15:
+    reserve = int(profile.cash_reserve) if profile is not None else 1200
+    risk = profile.risk if profile is not None else "stable"
+    expand_ok = land is not None and empty_n < 5 and farm.money >= land + reserve
+    if risk == "aggressive":
+        expand_ok = land is not None and farm.money >= land and (empty_n < 8 or state.day <= 20)
+    elif risk == "safe":
+        expand_ok = (
+            land is not None
+            and empty_n < 3
+            and farm.money >= land + max(reserve, 1500)
+            and state.day <= 12
+        )
+    else:
+        expand_ok = expand_ok and state.day <= 15
+    if expand_ok:
         macros.append(ExpandFarm())
 
     macros.append(Idle())

@@ -1,6 +1,7 @@
 """Agent interfaces and baselines."""
 
 from kaggriculture.agents.base import Agent
+from kaggriculture.agents.crew import CrewAgent
 from kaggriculture.agents.heuristic_agent import HeuristicAgent, MinimalEconomicAgent
 from kaggriculture.agents.official_agent import OfficialAgent
 from kaggriculture.agents.planner_agent import PlannerAgent
@@ -15,4 +16,5 @@ __all__ = [
     "HeuristicAgent",
     "ScriptedAgent",
     "PlannerAgent",
+    "CrewAgent",
 ]

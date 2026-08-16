@@ -62,6 +62,7 @@ class CompactTurn:
     shops: list[str] = field(default_factory=list)
     state_delta: dict[str, Any] = field(default_factory=dict)
     events: list[dict[str, Any]] = field(default_factory=list)
+    reasoning: list[Any] = field(default_factory=lambda: [None, None])
 
 
 @dataclass
@@ -89,6 +90,7 @@ class CompactReplay:
                     "shops": t.shops,
                     "state_delta": t.state_delta,
                     "events": t.events,
+                    "reasoning": t.reasoning,
                 }
                 for t in self.turns
             ],
@@ -106,6 +108,7 @@ def build_compact_replay(
     duration_s: float,
     rewards: Sequence[Optional[float]],
     statuses: Sequence[str],
+    decision_traces: Optional[Sequence[Sequence[Any]]] = None,
 ) -> CompactReplay:
     """Extract a compact turn log from official env.steps / env.logs.
 
@@ -125,6 +128,7 @@ def build_compact_replay(
         "num_steps": len(steps),
         "format": "compact_v2",
         "state_encoding": "initial_snapshot_plus_deltas",
+        "reasoning_schema": "coc_v1",
     }
 
     initial_state = _build_state_snapshot(steps[0]) if steps else {}
@@ -197,11 +201,29 @@ def build_compact_replay(
                     if previous_snapshot is None
                     else _derive_events(previous_snapshot, snapshot)
                 ),
+                reasoning=_reasoning_for_turn(i, decision_traces),
             )
         )
         previous_snapshot = snapshot
 
     return CompactReplay(meta=meta, initial_state=initial_state, turns=turns)
+
+
+def _reasoning_for_turn(
+    turn_index: int,
+    decision_traces: Optional[Sequence[Sequence[Any]]],
+) -> list[Any]:
+    """Map act() traces onto compact turns (turn 0 is the reset snapshot)."""
+    seats = [None, None]
+    if not decision_traces or turn_index <= 0:
+        return seats
+    act_index = turn_index - 1
+    for seat, traces in enumerate(decision_traces[:2]):
+        if traces is None:
+            continue
+        if act_index < len(traces):
+            seats[seat] = traces[act_index]
+    return seats
 
 
 def load_compact_replay(path: Path | str) -> dict[str, Any]:

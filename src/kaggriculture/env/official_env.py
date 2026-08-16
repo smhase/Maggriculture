@@ -175,6 +175,10 @@ class KaggricultureEnv:
 
         names = [_agent_name(agent_a), _agent_name(agent_b)]
         versions = [_agent_version(agent_a), _agent_version(agent_b)]
+        if hasattr(agent_a, "begin_episode"):
+            agent_a.begin_episode()
+        if hasattr(agent_b, "begin_episode"):
+            agent_b.begin_episode()
         kaggle_agents = [_to_kaggle_agent(agent_a), _to_kaggle_agent(agent_b)]
 
         logger.info("Starting game %s vs %s seed=%s", names[0], names[1], self._requested_seed)
@@ -208,6 +212,10 @@ class KaggricultureEnv:
                 duration_s=duration,
                 rewards=rewards,
                 statuses=statuses,
+                decision_traces=[
+                    _agent_traces(agent_a),
+                    _agent_traces(agent_b),
+                ],
             )
             compact_path = str(save_json(replay_path, compact.to_dict()))
 
@@ -239,6 +247,16 @@ class KaggricultureEnv:
             statuses,
         )
         return result
+
+
+def _agent_traces(agent: AgentLike) -> list[Any]:
+    dumped = getattr(agent, "dumped_traces", None)
+    if callable(dumped):
+        return list(dumped())
+    traces = getattr(agent, "decision_traces", None)
+    if traces is None:
+        return []
+    return list(traces)
 
 
 def _plain_action(action: Any) -> dict[str, Any]:

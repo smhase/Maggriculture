@@ -29,6 +29,7 @@ from kaggriculture.env.rules import CROPS, DEFAULT_EPISODE_STEPS, DEFAULT_TURNS_
 from kaggriculture.env.state import GameState
 from kaggriculture.env.tiles import is_empty, is_weed
 from kaggriculture.logging import get_logger
+from kaggriculture.planning.trace import DecisionTrace
 
 logger = get_logger("agents.heuristic")
 
@@ -44,6 +45,7 @@ class MinimalEconomicAgent(Agent):
         preferred_crop: Optional[str] = None,
         turns_per_day: int = DEFAULT_TURNS_PER_DAY,
     ) -> None:
+        super().__init__()
         self.episode_steps = int(episode_steps)
         self.preferred_crop = preferred_crop
         self.turns_per_day = int(turns_per_day)
@@ -63,9 +65,19 @@ class MinimalEconomicAgent(Agent):
         crop = self._choose_crop(state)
         can_plant = self._can_plant(state, crop, turns_per_day)
         market = self._market_orders(state, crop, can_plant)
-        farmer = self._farmer_op(state, crop, can_plant)
+        farmer, cause = self._farmer_op(state, crop, can_plant)
         hands = [["PASS"] for _ in state.self_player.farm.hands]
-        return make_action(farmer=farmer, hands=hands, market=market)
+        action = make_action(farmer=farmer, hands=hands, market=market)
+        causes = [cause]
+        if not can_plant:
+            causes.append("no_plant_last_hour_or_horizon")
+        self.last_trace = DecisionTrace(
+            source=self.name,
+            headline=f"heuristic {farmer[0]} because {cause}",
+            causes=causes,
+            macro=str(farmer[0]),
+        )
+        return action
 
     def _can_plant(self, state: GameState, crop: str, turns_per_day: int) -> bool:
         if state.hour >= turns_per_day - 1:
@@ -147,22 +159,20 @@ class MinimalEconomicAgent(Agent):
 
         # Prefer leaving current tile if others are urgent and current is already OK
         if plant_needs_urgent_water(tile, day):
-            return ["WATER"]
+            return ["WATER"], "urgent_water"
         if can_harvest_plant(tile, day):
-            return ["HARVEST"]
+            return ["HARVEST"], "harvest_here"
         if needs_water(tile, day) and not urgent:
-            # Water here only if nothing more urgent elsewhere
-            return ["WATER"]
+            return ["WATER"], "water_here"
         if needs_water(tile, day) and (fx, fy) in urgent:
-            return ["WATER"]
+            return ["WATER"], "urgent_water"
         if is_weed(tile):
-            return ["DIG"]
+            return ["DIG"], "clear_weed"
         if is_empty(tile) and seeds > 0 and can_plant and not urgent and not waters:
-            return ["PLANT", crop]
+            return ["PLANT", crop], "plant_here"
         if is_empty(tile) and seeds > 0 and can_plant and not urgent:
-            # Plant only if no unwatered plants waiting
             if not waters:
-                return ["PLANT", crop]
+                return ["PLANT", crop], "plant_here"
 
         target = (
             nearest(pos, urgent)
@@ -172,17 +182,16 @@ class MinimalEconomicAgent(Agent):
             or nearest(pos, weeds)
         )
         if target is None:
-            return ["PASS"]
+            return ["PASS"], "idle"
         if target == pos:
-            # Local fallback
             if needs_water(tile, day):
-                return ["WATER"]
+                return ["WATER"], "water_here"
             if is_empty(tile) and seeds > 0 and can_plant:
-                return ["PLANT", crop]
+                return ["PLANT", crop], "plant_here"
             if is_weed(tile):
-                return ["DIG"]
-            return ["PASS"]
-        return step_toward(pos, target)
+                return ["DIG"], "clear_weed"
+            return ["PASS"], "idle"
+        return step_toward(pos, target), f"walk_to_{target}"
 
 
 HeuristicAgent = MinimalEconomicAgent

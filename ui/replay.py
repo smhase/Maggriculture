@@ -13,6 +13,7 @@ from kaggriculture.simulation.replay import (
     reconstruct_turn,
     sibling_full_replay_path,
 )
+from kaggriculture.planning.trace import trace_headline, trace_target
 from ui.common import discover_json_files, nonzero_items
 
 _VISUALIZER_DIR = Path(__file__).resolve().parent / "static" / "replay_visualizers"
@@ -34,16 +35,23 @@ def replay_timeline(replay: Mapping[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def farm_grid(player: Mapping[str, Any]) -> list[list[str]]:
+def farm_grid(
+    player: Mapping[str, Any],
+    *,
+    target: tuple[int, int] | None = None,
+) -> list[list[str]]:
     """Render a normalized farm snapshot as a compact text grid."""
     tiles = player.get("tiles", [])
     farmer = tuple(player.get("farmer", [-1, -1]))
     hands = {tuple(position) for position in player.get("hands", [])}
+    mark = tuple(target) if target is not None else None
     grid: list[list[str]] = []
     for y, row in enumerate(tiles):
         rendered: list[str] = []
         for x, tile in enumerate(row):
             label = _tile_label(tile)
+            if mark == (x, y):
+                label = f"*{label}"
             if (x, y) == farmer:
                 label = f"F·{label}"
             elif (x, y) in hands:
@@ -256,10 +264,21 @@ def _render_replay_inspector(replay: Mapping[str, Any], names: list[str]) -> Non
 
         if state is not None:
             tab_a, tab_b, market_tab = st.tabs((names[0], names[1], "Market & events"))
+            reasons = list(turn.get("reasoning") or [None, None])
+            while len(reasons) < 2:
+                reasons.append(None)
             with tab_a:
-                _render_player(state["players"][0], turn.get("actions", [None, None])[0])
+                _render_player(
+                    state["players"][0],
+                    turn.get("actions", [None, None])[0],
+                    reasons[0],
+                )
             with tab_b:
-                _render_player(state["players"][1], turn.get("actions", [None, None])[1])
+                _render_player(
+                    state["players"][1],
+                    turn.get("actions", [None, None])[1],
+                    reasons[1],
+                )
             with market_tab:
                 _render_market_and_events(state, turn)
         else:
@@ -300,13 +319,14 @@ def _move_turn(delta: int, count: int) -> None:
     st.session_state.replay_turn = min(count - 1, max(0, current + delta))
 
 
-def _render_player(player: Mapping[str, Any], action: Any) -> None:
+def _render_player(player: Mapping[str, Any], action: Any, reasoning: Any = None) -> None:
     import streamlit as st
 
+    target = trace_target(reasoning)
     left, right = st.columns([3, 2])
     with left:
-        st.caption("Farm · F = farmer, H = hired hand")
-        grid = farm_grid(player)
+        st.caption("Farm · F = farmer, H = hired hand, * = planned target")
+        grid = farm_grid(player, target=target)
         st.dataframe(
             grid,
             width="stretch",
@@ -334,6 +354,45 @@ def _render_player(player: Mapping[str, Any], action: Any) -> None:
             st.caption("None")
         st.markdown("#### Chosen action")
         st.code(json.dumps(action, indent=2), language="json")
+        _render_reasoning(reasoning)
+
+
+def _render_reasoning(reasoning: Any) -> None:
+    import streamlit as st
+
+    headline = trace_headline(reasoning)
+    if not headline:
+        st.caption("No decision trace on this turn.")
+        return
+    st.markdown("#### Why")
+    st.write(headline)
+    rows = _reasoning_rows(reasoning)
+    if not rows:
+        return
+    with st.expander("Decision trace", expanded=False):
+        st.dataframe(rows, hide_index=True, width="stretch")
+
+
+def _reasoning_rows(reasoning: Any) -> list[dict[str, Any]]:
+    if reasoning is None:
+        return []
+    items = reasoning if isinstance(reasoning, list) else [reasoning]
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        rows.append(
+            {
+                "Unit": item.get("unit") or "",
+                "Source": item.get("source") or "",
+                "Macro": item.get("macro") or "",
+                "Headline": item.get("headline") or "",
+                "Score": item.get("score"),
+                "Causes": "; ".join(item.get("causes") or []),
+                "Plan": " → ".join(item.get("plan") or []),
+            }
+        )
+    return rows
 
 
 def _render_market_and_events(state: Mapping[str, Any], turn: Mapping[str, Any]) -> None:

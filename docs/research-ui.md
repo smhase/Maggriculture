@@ -33,7 +33,7 @@ It also keeps a research inspector for:
 - previous/next, slider-based jumping, and play/pause;
 - reconstructed farms and private resources for both players;
 - farmer and hired-hand locations;
-- chosen actions and derived events;
+- chosen actions, **decision traces (why)**, and derived events;
 - shared market inventory, prices, and town shops; and
 - full-season bank-balance and commodity-price charts.
 

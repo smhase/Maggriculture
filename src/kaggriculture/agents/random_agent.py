@@ -10,6 +10,7 @@ from kaggriculture.agents.legal import farmer_candidates, market_candidates
 from kaggriculture.env.actions import make_action
 from kaggriculture.env.observation import parse_observation
 from kaggriculture.env.rules import DEFAULT_EPISODE_STEPS
+from kaggriculture.planning.trace import DecisionTrace, describe_action
 
 
 class RandomLegalAgent(Agent):
@@ -23,6 +24,7 @@ class RandomLegalAgent(Agent):
     version = "0.1.0"
 
     def __init__(self, seed: int = 0, *, episode_steps: int = DEFAULT_EPISODE_STEPS) -> None:
+        super().__init__()
         self.seed = int(seed)
         self.episode_steps = int(episode_steps)
         self._rng = random.Random(self.seed)
@@ -56,4 +58,11 @@ class RandomLegalAgent(Agent):
             if m_opts:
                 market.append(list(self._rng.choice(m_opts)))
 
-        return make_action(farmer=farmer, hands=hands, market=market)
+        action = make_action(farmer=farmer, hands=hands, market=market)
+        self.last_trace = DecisionTrace(
+            source=self.name,
+            headline=f"sampled_legal {describe_action(action)}",
+            causes=["sampled_legal", f"farmer_candidates={len(farmer_ops)}"],
+            macro=str(farmer[0] if farmer else "PASS"),
+        )
+        return action

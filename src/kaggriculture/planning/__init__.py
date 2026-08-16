@@ -2,8 +2,10 @@
 
 from kaggriculture.planning.beam_search import BeamResult, beam_search, choose_crop
 from kaggriculture.planning.evaluator import EvalBreakdown, evaluate_breakdown, evaluate_state
+from kaggriculture.planning.forward import apply_macro
 from kaggriculture.planning.macros import Macro, MacroKind, macro_label
 from kaggriculture.planning.scheduler import propose_macros, schedule
+from kaggriculture.planning.trace import DecisionTrace
 
 __all__ = [
     "Macro",
@@ -17,4 +19,6 @@ __all__ = [
     "beam_search",
     "BeamResult",
     "choose_crop",
+    "apply_macro",
+    "DecisionTrace",
 ]

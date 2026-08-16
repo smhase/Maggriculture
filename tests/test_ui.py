@@ -40,6 +40,17 @@ def test_replay_presentation_helpers():
     assert grid[0][1] == "WHE:2"
     assert grid[1][0] == "LOCK"
     assert grid[1][1] == "H·WEED"
+    marked = farm_grid(player, target=(1, 0))
+    assert marked[0][1].startswith("*")
+
+
+def test_reasoning_rows():
+    from ui.replay import _reasoning_rows
+
+    rows = _reasoning_rows(
+        {"headline": "hi", "unit": "farmer", "source": "planner", "causes": ["a"], "plan": ["x"]}
+    )
+    assert rows[0]["Headline"] == "hi"
 
 
 def test_normalize_legacy_and_experiment_v1():

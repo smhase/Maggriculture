@@ -31,6 +31,7 @@ from kaggriculture.env.rules import CROPS, DEFAULT_EPISODE_STEPS, DEFAULT_TURNS_
 from kaggriculture.env.state import GameState
 from kaggriculture.env.tiles import is_empty, is_weed
 from kaggriculture.logging import get_logger
+from kaggriculture.planning.trace import DecisionTrace
 
 logger = get_logger("agents.scripted")
 
@@ -47,6 +48,7 @@ class ScriptedAgent(Agent):
         episode_steps: int = DEFAULT_EPISODE_STEPS,
         turns_per_day: int = DEFAULT_TURNS_PER_DAY,
     ) -> None:
+        super().__init__()
         self.episode_steps = int(episode_steps)
         self.turns_per_day = int(turns_per_day)
         self._last_phase: Optional[str] = None
@@ -82,7 +84,14 @@ class ScriptedAgent(Agent):
             self._unit(state, i + 1, allow_plant)
             for i in range(len(state.self_player.farm.hands))
         ]
-        return make_action(farmer=farmer, hands=hands, market=market)
+        action = make_action(farmer=farmer, hands=hands, market=market)
+        self.last_trace = DecisionTrace(
+            source=self.name,
+            headline=f"scripted phase={phase} farmer={farmer[0]}",
+            causes=[f"phase={phase}", f"allow_plant={allow_plant}"],
+            macro=str(farmer[0]),
+        )
+        return action
 
     def _phase(self, day: int) -> str:
         if day <= 6:

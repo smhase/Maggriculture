@@ -66,7 +66,8 @@ python -m kaggriculture.simulation.runner \
 ```
 
 Built-in / local agents: `pass`, `random`, `starter`, `random_legal`,
-`heuristic`, `scripted`, `planner`.
+`heuristic`, `scripted`, `planner`, `long_term`, `short_term`, `solo`,
+`risk_taker`, `safe`, `swing`, `always_win`, `never_lose`, `crew`.
 
 ## Run a tournament
 
@@ -151,13 +152,13 @@ ranking derived from existing experiment results.
 - Learning / RL
 - Submission exporter
 
-## Implemented through Phase 10 (+ planner prototype)
+## Implemented through Phase 11
 
 - Official env wrapper + reconstructable compact v2 replays
 - `GameState` parsing + legal-action helpers
 - Economics: `analyze_crop`, `analyze_animal`, `rank_investments`
-- Agents: `random_legal`, `heuristic`, `scripted`, `planner`
-- Macros + tactical scheduler + beam search (`kaggriculture.planning`)
+- Agents: `random_legal`, `heuristic`, `scripted`, `planner`, strategy profiles, `crew`
+- Macros + forward-model beam search + CoC traces on compact replays
 - Batch experiment reports with aggregate metrics and reproducibility metadata
 - Configured, seat-balanced round-robin tournaments with persisted Elo/matrix
 - Streamlit replay, experiment, and population research views

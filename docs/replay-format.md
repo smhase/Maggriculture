@@ -57,7 +57,9 @@ It additionally contains:
 
 - `state_delta` — changed player fields, private counts, unit inventories,
   tiles, market counts/prices, and shops;
-- `events` — semantic changes useful to people and the future UI.
+- `events` — semantic changes useful to people and the future UI;
+- `reasoning` — optional CoC traces (`coc_v1`), one per seat. Turn 0 is
+  `[null, null]`. A seat may be one object or a list (crew farmer + hands).
 
 Turn zero corresponds to `initial_state` and has an empty delta. A later turn's
 delta transforms the preceding recorded state into that turn's resulting
@@ -105,9 +107,9 @@ checkpoints if profiling shows a need.
 
 - `load_compact_replay()` can read structural compact v1 files, but
   `reconstruct_turn()` rejects them because they have no initial state.
-- Planner reasoning is not yet part of the common agent contract, so it is not
-  recorded.
+- Compact v2 may include per-turn `reasoning` (see `meta.reasoning_schema`).
+  Traces are research-only and are not sent to the official engine.
 - Events describe observable transitions; they do not attempt to infer every
-  economic or strategic cause.
+  economic or strategic cause. Decision traces explain chosen actions.
 - JSON is deliberately readable. Compression can be added at the file boundary
   later without changing the logical schema.

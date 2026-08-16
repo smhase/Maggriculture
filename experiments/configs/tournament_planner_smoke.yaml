@@ -1,0 +1,22 @@
+schema: tournament_config_v1
+name: planner_phase11_smoke
+
+# Short-horizon population check used by tests. Full 720-turn baseline
+# tournament remains experiments/configs/tournament_baselines.yaml.
+population:
+  - id: pass
+    agent: pass
+    label: Official pass
+  - id: heuristic_v1
+    agent: heuristic
+    label: Minimal economic v1
+  - id: planner_v1
+    agent: planner
+    label: Macro beam planner v1
+
+games_per_matchup: 2
+seed_start: 11000
+episode_steps: 96
+initial_rating: 1500
+k_factor: 24
+debug: false

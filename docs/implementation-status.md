@@ -1,16 +1,14 @@
 # Implementation Status
 
-Audited against `docs/roadmap.md` on 2026-08-15. A phase is called complete
+Audited against `docs/roadmap.md` on 2026-08-16. A phase is called complete
 only when its central deliverable exists and is covered by relevant tests.
 Later prototypes do not move the sequential phase boundary past an earlier
 gap.
 
 ## Sequential milestone
 
-The platform is implemented through **Phase 10**. Phase 11 is partially present
-as a lightweight macro beam-search prototype. The next sequential target is
-**Phase 11 — Model-based planner**, specifically benchmarking and strengthening
-the existing prototype against the authoritative tournament population.
+The platform is implemented through **Phase 11**. The next sequential target is
+**Phase 12 — Opponent modelling**.
 
 ## Evidence by phase
 
@@ -53,10 +51,12 @@ the existing prototype against the authoritative tournament population.
   `tournament_v1` reports persist Elo, per-agent samples/outcomes, failures,
   every game, pair aggregates, and a full directional matchup matrix. The UI
   prefers these authoritative reports while retaining an exploratory fallback.
-- **Phase 11 — prototype.** Macro beam search, a lightweight delta model, a
-  terminal-aware evaluator, and `PlannerAgent` exist and pass full games. It is
-  not a true official-state rollout planner and has not been benchmarked
-  against a diverse population.
+- **Phase 11 — complete for the planned prototype.** Configurable macro beam
+  search, terminal-aware evaluator (cash, liquidation, seeds, crops,
+  infrastructure, future costs, risk), CoC traces, strategy/crew variants,
+  act-timeout regression, and a smoke tournament harness against pass/heuristic.
+  Full-horizon quality is the existing planner-vs-starter 720-turn test.
+  Search still does not clone the official engine.
 - **Phases 12–20 — not started.** Opponent, market, learning, self-play, hybrid,
   and submission modules are placeholders only.
 
@@ -74,5 +74,6 @@ the existing prototype against the authoritative tournament population.
 - Tournament Elo is sequential and depends on configured schedule order; the
   paired schedule is deterministic and seat-balanced, and the matchup matrix
   remains the primary evidence for non-transitive relationships.
-- Existing Phase 11 search scores macro deltas without cloning or rolling the
-  official engine forward.
+- Existing Phase 11 search uses an approximate `apply_macro` mental model
+  rather than cloning the official engine. Live `act()` output remains an
+  official farmer/hands/market dict.
